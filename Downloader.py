@@ -85,7 +85,7 @@ def join(directory, output_dir, vid_name, start_time=0, duration=0):
     if start_time or duration:
         ff = FFmpeg(
             inputs={directory + '\\Video' + fext: f'-ss {start_time}', directory + '\\Audio.mp4': f'-ss {start_time}'},
-            outputs={output_dir + '\\' + vid_name + '.mp4': f'-c:v libx264 -crf 10 -preset slow -frames {duration} -c:a aac'}
+            outputs={output_dir + '\\' + vid_name + '.mp4': f'-c:v libx264 -crf 10 -preset slow -t {duration/30} -c:a aac -t {duration/30}'}
         )
         """
         ffmpeg -i "G:\Recording\Video.mp4" -ss 17:00 -to 17:10 -force_key_frames "expr:eq(n,n)" -c:v libx264 -crf 10 -preset slow -c:a copy G:\Recording\test.mp4
@@ -93,7 +93,7 @@ def join(directory, output_dir, vid_name, start_time=0, duration=0):
         ffmpeg -ss 1020.000 -i "G:\Recording\Video.mp4" -c:a copy -c:v libx264 -crf 10 -preset slow -frames:v 300 "G:\Recording\test2.mp4"
         use that to cut video, after analysing it, before adding audio to it
         """
-        # ff.cmd = f'ffmpeg -ss {start_time} -i "G:\Recording\Video.mp4" -c:a copy -c:v libx264 -crf 10 -preset slow -frames:v {duration} "G:\Recording\test2.mp4"'
+        #ff.cmd = f'ffmpeg -ss {start_time} -i "G:\Recording\Video.mp4" -c:v libx264 -crf 10 -preset slow -frames:v {duration} "G:\Recording\test2.mp4"'
     else:
         ff = FFmpeg(
             inputs={directory + '\\Video' + fext: None, directory + '\\Audio.mp4': None},

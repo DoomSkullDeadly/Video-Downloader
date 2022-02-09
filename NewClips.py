@@ -14,14 +14,15 @@ new_dir = r"G:\\Etho New Clips"
 old_files = [fname.path for fname in os.scandir(old_dir) if fname.is_file()]
 new_files = [fname.path for fname in os.scandir(new_dir) if fname.is_file()]
 
+
 p = Playlist(playlist_url)
 videos = [video for video in p.videos[:150]]
 
 
 def get_next_ep_num():
     for ep in old_files:
-        if ep not in new_files:
-            return ep.split("Ep ")[1].split(" -")[0]
+        if ep.replace(old_dir, new_dir) not in new_files:
+            return ep.split("Ep ")[1].split(" -")[0][:3]
 
 
 def get_old_clips_urls(num):
@@ -43,7 +44,7 @@ def main():
         if compare_out[0] < 0.05:
             Downloader.join(directory=new_dir, output_dir=new_dir, vid_name=clip.replace(old_dir+'\\', '')
                             .replace('.mp4', ''), start_time=start_time, duration=compare_out[2])
-
+            new_files.append(new_dir+clip.replace(old_dir+'\\', ''))
 
 if __name__ == "__main__":
     while True:

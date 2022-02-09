@@ -82,7 +82,7 @@ def main(main_dir, clip_dir, start_frame=0):
     comparisons, clip_duration = iter_all(main_dir, clip_dir, start_frame)
     all_together = [sum(comparisons[i])/len(comparisons[i]) for i in comparisons]
 
-    return min(all_together), all_together.index(min(all_together)), clip_duration
+    return min(all_together), all_together.index(min(all_together))+start_frame, clip_duration
 
 
 if __name__ == '__main__':

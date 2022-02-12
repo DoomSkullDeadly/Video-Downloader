@@ -59,7 +59,7 @@ def iter_all(main_dir, clip_dir, start_frame):
             clip_frame = clip_frames[j]
             this_diff = compare(main_frame, clip_frame)
 
-            if this_diff < 0.005:
+            if this_diff < 0.01:
                 frame_diff.append(this_diff)
             else:
                 frame_diff = [1]
@@ -67,22 +67,35 @@ def iter_all(main_dir, clip_dir, start_frame):
 
         comparisons[i] = frame_diff
         if i != start_frame and 1 not in comparisons[i-1] and 1 in comparisons[i]:
-            return comparisons, clip_frame_num
+            return dict(comparisons), clip_frame_num
+
+        elif i == main_frame_num-1:
+            return None
 
 
 def compare(vid, clip, num=64):
     percent = 0
     for a, b in zip(np.array_split(vid, num), np.array_split(clip, num)):
-        percent += abs(np.sum(a) - np.sum(b)) / ((len(a)) * (len(a[0])) * 3 * 256)  # DO FIX on 256???
+        diff = abs(np.sum(a) - np.sum(b)) / ((len(a)) * (len(a[0])) * 3)
+        if diff < 0.1:
+            percent += diff
+        else:
+            return 1
     return percent/num
 
 
 def main(main_dir, clip_dir, start_frame=0):
 
-    comparisons, clip_duration = iter_all(main_dir, clip_dir, start_frame)
-    all_together = [sum(comparisons[i])/len(comparisons[i]) for i in comparisons]
+    iter_all_out = iter_all(main_dir, clip_dir, start_frame)
+    if iter_all_out is not None:
+        comparisons = iter_all_out[0]
+        clip_duration = iter_all_out[1]
+        all_together = [sum(comparisons[i])/len(comparisons[i]) for i in comparisons]
 
-    return min(all_together), all_together.index(min(all_together))+start_frame, clip_duration
+        return min(all_together), all_together.index(min(all_together))+start_frame, clip_duration
+
+    else:
+        return None
 
 
 if __name__ == '__main__':

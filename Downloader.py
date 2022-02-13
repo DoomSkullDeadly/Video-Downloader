@@ -74,7 +74,7 @@ def download(url, save_dir, target_res='2160p', target_fps='60'):
         return 'video', ret
 
 
-def join(directory, output_dir, vid_name, start_time=0, duration=0):
+def join(directory, output_dir, vid_name, start_time=0.0, duration=0):
     global bestcodec
 
     if bestcodec == 'vp9':

@@ -6,7 +6,7 @@ from PIL import Image
 warnings.filterwarnings("ignore")
 
 
-def get_frame(cap, frame, size):
+def get_frame(cap, frame, size):  # gets a frame from specified position, returns at specified size
     cap.set(cv2.CAP_PROP_POS_FRAMES, frame)
     ret, cv2_im = cap.read()
     if ret:
@@ -16,7 +16,7 @@ def get_frame(cap, frame, size):
         return np.array(pil_im_resize, dtype='int64')
 
 
-def get_clip_frames(cap, clip_frame_num, size, num=7):
+def get_clip_frames(cap, clip_frame_num, size, num=7):  # get frames from the clip to compare
     frame_pos_list = np.linspace(0, clip_frame_num-1, num=num, dtype='int')
     clip_frames = []
     for frame_pos in frame_pos_list:
@@ -25,7 +25,7 @@ def get_clip_frames(cap, clip_frame_num, size, num=7):
     return clip_frames, frame_pos_list
 
 
-def get_size(cap):
+def get_size(cap):  # get resolution of video
     cap.set(cv2.CAP_PROP_POS_FRAMES, 1)
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -51,7 +51,7 @@ def iter_all(main_dir, clip_dir, start_frame):
 
     for i in range(start_frame, main_frame_num):
         if i + clip_frame_pos[len(clip_frame_pos)-1] > main_frame_num:
-            return comparisons
+            return None
         frame_diff = []
 
         for j in range(len(clip_frame_pos)):
@@ -59,7 +59,7 @@ def iter_all(main_dir, clip_dir, start_frame):
             clip_frame = clip_frames[j]
             this_diff = compare(main_frame, clip_frame)
 
-            if this_diff < 0.01:
+            if this_diff < 0.1:
                 frame_diff.append(this_diff)
             else:
                 frame_diff = [1]
@@ -67,17 +67,17 @@ def iter_all(main_dir, clip_dir, start_frame):
 
         comparisons[i] = frame_diff
         if i != start_frame and 1 not in comparisons[i-1] and 1 in comparisons[i]:
-            return dict(comparisons), clip_frame_num
+            return comparisons, clip_frame_num
 
-        elif i == main_frame_num-1:
+        elif i == main_frame_num-start_frame-1:
             return None
 
 
-def compare(vid, clip, num=64):
+def compare(vid, clip, num=64):  # compare clip frame to main video frame
     percent = 0
     for a, b in zip(np.array_split(vid, num), np.array_split(clip, num)):
-        diff = abs(np.sum(a) - np.sum(b)) / ((len(a)) * (len(a[0])) * 3)
-        if diff < 0.1:
+        diff = abs(np.sum(a) - np.sum(b)) / ((len(a)) * (len(a[0])) * 3 * 4096)
+        if diff < 0.01:
             percent += diff
         else:
             return 1
@@ -87,11 +87,13 @@ def compare(vid, clip, num=64):
 def main(main_dir, clip_dir, start_frame=0):
 
     iter_all_out = iter_all(main_dir, clip_dir, start_frame)
+    print(iter_all_out)
     if iter_all_out is not None:
         comparisons = iter_all_out[0]
         clip_duration = iter_all_out[1]
         all_together = [sum(comparisons[i])/len(comparisons[i]) for i in comparisons]
 
+        print(min(all_together), all_together.index(min(all_together))+start_frame, clip_duration)
         return min(all_together), all_together.index(min(all_together))+start_frame, clip_duration
 
     else:
@@ -99,4 +101,4 @@ def main(main_dir, clip_dir, start_frame=0):
 
 
 if __name__ == '__main__':
-    main(main_dir=r"G:\Recording\Video.mp4", clip_dir=r"G:\Etho Best 105-605\Ep 106 - 1.mp4")
+    main(main_dir=r"G:\Etho New Clips\test.mp4", clip_dir=r"G:\Etho Best 105-605\Ep 107.mp4", start_frame=300)

@@ -119,9 +119,9 @@ def main():
     output_dir = 'G:\\Recording'
 
     if 'audio' in download(url, directory, target_res, target_fps):
-        join(directory=directory, output_dir=output_dir, vid_name=vid_name, start_time=1023.7666666666667, duration=86)
-        #os.remove(directory+'\\Video.mp4')
-        #os.remove(directory+'\\Audio.mp4')
+        join(directory=directory, output_dir=output_dir, vid_name=vid_name)
+        os.remove(directory+'\\Video.mp4')
+        os.remove(directory+'\\Audio.mp4')
     else:
         shutil.move(directory+'\\Video.mp4', output_dir+'\\Video.mp4')
         os.rename(directory+'\\Video.mp4', output_dir+'\\'+vid_name+'.mp4')

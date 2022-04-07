@@ -16,7 +16,7 @@ def get_frame(cap, frame, size):  # gets a frame from specified position, return
         return np.array(pil_im_resize, dtype='int64')
 
 
-def get_clip_frames(cap, clip_frame_num, size, num=7):  # get frames from the clip to compare
+def get_clip_frames(cap, clip_frame_num, size, num=8):  # get frames from the clip to compare
     frame_pos_list = np.linspace(0, clip_frame_num-1, num=num, dtype='int')
     clip_frames = []
     for frame_pos in frame_pos_list:
@@ -45,21 +45,22 @@ def iter_all(main_dir, clip_dir, start_frame):
 
     size = (min([main_width, clip_width]), min([main_height, clip_height]))
 
-    clip_frames, clip_frame_pos = get_clip_frames(cap_clip, clip_frame_num, size)
+    clip_frames, clip_frame_pos = get_clip_frames(cap=cap_clip, clip_frame_num=clip_frame_num, size=size,
+                                                  num=max(int(clip_frame_num / (30 * 1.2)), 8))
 
     comparisons = {}
 
     for i in range(start_frame, main_frame_num):
         if i + clip_frame_pos[len(clip_frame_pos)-1] > main_frame_num:
-            return None
+            return comparisons, clip_frame_num
         frame_diff = []
 
         for j in range(len(clip_frame_pos)):
             main_frame = get_frame(cap_main, i+clip_frame_pos[j], size)
             clip_frame = clip_frames[j]
-            this_diff = compare(main_frame, clip_frame)
+            this_diff = compare(vid=main_frame, clip=clip_frame, num=size[1])
 
-            if this_diff < 0.1:
+            if this_diff != 1:
                 frame_diff.append(this_diff)
             else:
                 frame_diff = [1]
@@ -69,19 +70,18 @@ def iter_all(main_dir, clip_dir, start_frame):
         if i != start_frame and 1 not in comparisons[i-1] and 1 in comparisons[i]:
             return comparisons, clip_frame_num
 
-        elif i == main_frame_num-start_frame-1:
-            return None
-
 
 def compare(vid, clip, num=64):  # compare clip frame to main video frame
     percent = 0
     for a, b in zip(np.array_split(vid, num), np.array_split(clip, num)):
-        diff = abs(np.sum(a) - np.sum(b)) / ((len(a)) * (len(a[0])) * 3 * 4096)
-        if diff < 0.01:
+        diff = abs(np.sum(a) - np.sum(b)) / ((len(a)) * (len(a[0])) * 3 * 256)  # divides by resolution, number of
+        # individual pixels (3), number of possible pixel values (256)
+        if diff < 0.5:
             percent += diff
         else:
             return 1
-    return percent/num
+        percent += diff
+    return percent/num  # divides by number of sectors that were compared
 
 
 def main(main_dir, clip_dir, start_frame=0):
